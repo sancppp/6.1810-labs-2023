@@ -60,3 +60,9 @@ syscall的参数传递？
 
 如何实现trace？
 修改proc结构，增加mask字段 + sys_trace()&&fork()维护mask + 在syscall函数中输出
+
+## 添加一个syscall-sysinfo
+sysinfo，参数是一个指向对象的指针，这个对象在用户空间。
+内核态需要填写信息。剩余内存&进程数
+
+实现要点：参考已有的代码，如何遍历proc数组&&如何向用户空间传数据

@@ -5,7 +5,6 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
-
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -218,6 +217,18 @@ void proc_freepagetable(pagetable_t pagetable, uint64 sz)
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
   uvmfree(pagetable, sz);
+}
+
+// 供sysinfo系统调用获取进程数量
+uint64 get_nf_used_proc(void)
+{
+  uint64 n = 0;
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+    // TODO，是否需要加锁？
+    if (p->state != UNUSED)
+      n++;
+  return n;
 }
 
 // a user program that calls exec("/init")
