@@ -57,6 +57,22 @@ void usertrap(void) {
     syscall();
   } else if ((which_dev = devintr()) != 0) {
     // ok
+    if (which_dev == 2) {
+      // time interrupt
+      if (p->ticks > 0 && p->had_return) {
+        // 如果ticks大于零则说明有注册alarm；并且此时handler已经返回了
+        p->tick_counter++;
+        if (p->tick_counter == p->ticks) {
+          // 到达了次数
+          // 1. 保存现场，直接暴力全部保存。之后就可以修改trapframe了
+          p->save_trapframe = *(p->trapframe);
+          // 2. 设置epc寄存器的值为handler的指针
+          p->trapframe->epc = (uint64)p->handler;
+          p->had_return = 0;
+          p->tick_counter = 0;
+        }
+      }
+    }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
