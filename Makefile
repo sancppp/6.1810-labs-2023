@@ -270,7 +270,7 @@ clean:
 	*/*.o */*.d */*.asm */*.sym \
 	$U/initcode $U/initcode.out $U/usys.S $U/_* \
 	$K/kernel \
-	mkfs/mkfs fs.img .gdbinit __pycache__ xv6.out* \
+	mkfs/mkfs fs.img __pycache__ xv6.out* \
 	ph barrier
 
 # try to generate a unique GDB port
