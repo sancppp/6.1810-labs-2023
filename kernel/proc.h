@@ -20,10 +20,10 @@ struct context {
 
 // Per-CPU state.
 struct cpu {
-  struct proc *proc;          // The process running on this cpu, or null.
-  struct context context;     // swtch() here to enter scheduler().
-  int noff;                   // Depth of push_off() nesting.
-  int intena;                 // Were interrupts enabled before push_off()?
+  struct proc *proc;       // The process running on this cpu, or null.
+  struct context context;  // swtch() here to enter scheduler().
+  int noff;                // Depth of push_off() nesting.
+  int intena;              // Were interrupts enabled before push_off()?
 };
 
 extern struct cpu cpus[NCPU];
@@ -41,11 +41,11 @@ extern struct cpu cpus[NCPU];
 // return-to-user path via usertrapret() doesn't return through
 // the entire kernel call stack.
 struct trapframe {
-  /*   0 */ uint64 kernel_satp;   // kernel page table
-  /*   8 */ uint64 kernel_sp;     // top of process's kernel stack
-  /*  16 */ uint64 kernel_trap;   // usertrap()
-  /*  24 */ uint64 epc;           // saved user program counter
-  /*  32 */ uint64 kernel_hartid; // saved kernel tp
+  /*   0 */ uint64 kernel_satp;    // kernel page table
+  /*   8 */ uint64 kernel_sp;      // top of process's kernel stack
+  /*  16 */ uint64 kernel_trap;    // usertrap()
+  /*  24 */ uint64 epc;            // saved user program counter
+  /*  32 */ uint64 kernel_hartid;  // saved kernel tp
   /*  40 */ uint64 ra;
   /*  48 */ uint64 sp;
   /*  56 */ uint64 gp;
@@ -81,27 +81,50 @@ struct trapframe {
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+// lab10 -> hit.3:
+//  Keep track of what mmap has mapped for each process. Define a structure
+//  corresponding to the VMA (virtual memory area) described in Lecture 15,
+//  recording the address, length, permissions, file, etc. for a virtual memory
+//  range created by mmap. Since the xv6 kernel doesn't have a memory allocator
+//  in the kernel, it's OK to declare a fixed-size array of VMAs and allocate
+//  from that array as needed. A size of 16 should be sufficient.
+struct VMA {
+  uint8 used;
+  uint64 addr;
+  int length;
+  int prot;
+  int flags;
+  int fd;
+  int offset;
+  struct file *file;
+  int free_len;
+};
+
 // Per-process state
 struct proc {
   struct spinlock lock;
 
   // p->lock must be held when using these:
-  enum procstate state;        // Process state
-  void *chan;                  // If non-zero, sleeping on chan
-  int killed;                  // If non-zero, have been killed
-  int xstate;                  // Exit status to be returned to parent's wait
-  int pid;                     // Process ID
+  enum procstate state;  // Process state
+  void *chan;            // If non-zero, sleeping on chan
+  int killed;            // If non-zero, have been killed
+  int xstate;            // Exit status to be returned to parent's wait
+  int pid;               // Process ID
 
   // wait_lock must be held when using this:
-  struct proc *parent;         // Parent process
+  struct proc *parent;  // Parent process
 
   // these are private to the process, so p->lock need not be held.
-  uint64 kstack;               // Virtual address of kernel stack
-  uint64 sz;                   // Size of process memory (bytes)
-  pagetable_t pagetable;       // User page table
-  struct trapframe *trapframe; // data page for trampoline.S
-  struct context context;      // swtch() here to run process
-  struct file *ofile[NOFILE];  // Open files
-  struct inode *cwd;           // Current directory
-  char name[16];               // Process name (debugging)
+  uint64 kstack;                // Virtual address of kernel stack
+  uint64 sz;                    // Size of process memory (bytes)
+  pagetable_t pagetable;        // User page table
+  struct trapframe *trapframe;  // data page for trampoline.S
+  struct context context;       // swtch() here to run process
+  struct file *ofile[NOFILE];   // Open files
+  struct inode *cwd;            // Current directory
+  char name[16];                // Process name (debugging
+
+#ifdef LAB_MMAP
+  struct VMA vma[NOFILE];  // for lab10
+#endif
 };
